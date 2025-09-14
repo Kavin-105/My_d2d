@@ -50,17 +50,22 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Task> get _completedTasks =>
       _tasks.where((task) => task.isDone).toList();
 
-  List<Task> get _pendingTasks => _tasks.where((task) =>
+  List<Task> get _pendingTasks => _tasks
+      .where((task) =>
   !task.isDone &&
-      task.date.isAfter(DateTime.now().subtract(const Duration(days: 1)))).toList();
+      task.date.isAfter(DateTime.now().subtract(const Duration(days: 1))))
+      .toList();
 
-  List<Task> get _expiredTasks =>
-      _tasks.where((task) => !task.isDone && task.date.isBefore(DateTime.now())).toList();
+  List<Task> get _expiredTasks => _tasks
+      .where((task) => !task.isDone && task.date.isBefore(DateTime.now()))
+      .toList();
 
-  List<Task> get _todayTasks => _tasks.where((task) =>
+  List<Task> get _todayTasks => _tasks
+      .where((task) =>
   task.date.year == DateTime.now().year &&
       task.date.month == DateTime.now().month &&
-      task.date.day == DateTime.now().day).toList();
+      task.date.day == DateTime.now().day)
+      .toList();
 
   List<Task> get _tomorrowTasks => _tasks.where((task) {
     final tomorrow = DateTime.now().add(const Duration(days: 1));
@@ -86,7 +91,6 @@ class _HomeScreenState extends State<HomeScreen> {
   // Toggle Done with confirmation if undoing
   void _toggleTask(int index) {
     if (_tasks[index].isDone) {
-      // If already completed → ask before undo
       showDialog(
         context: context,
         builder: (context) {
@@ -95,13 +99,13 @@ class _HomeScreenState extends State<HomeScreen> {
             content: const Text("Do you want to mark this task as pending again?"),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context), // cancel
+                onPressed: () => Navigator.pop(context),
                 child: const Text("Cancel"),
               ),
               TextButton(
                 onPressed: () {
                   setState(() {
-                    _tasks[index].toggleDone(); // undo completion
+                    _tasks[index].toggleDone();
                   });
                   _saveTasks();
                   Navigator.pop(context);
@@ -116,14 +120,12 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       );
     } else {
-      // Normal complete (no confirmation needed)
       setState(() {
         _tasks[index].toggleDone();
       });
       _saveTasks();
     }
   }
-
 
   // Delete Task with confirmation
   void _deleteTask(int index) {
@@ -135,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
           content: const Text("Are you sure you want to delete this task?"),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context), // cancel
+              onPressed: () => Navigator.pop(context),
               child: const Text("Cancel"),
             ),
             TextButton(
@@ -144,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   _tasks.removeAt(index);
                 });
                 _saveTasks();
-                Navigator.pop(context); // close dialog
+                Navigator.pop(context);
               },
               child: const Text(
                 "Delete",
@@ -157,7 +159,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   // Tasks for selected date
   List<Task> _filteredTasks() {
     if (_selectedDate == null) return [];
@@ -169,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
         .toList();
   }
 
-  // Calendar popup
+// Calendar popup
   void _showCalendarDialog() {
     showDialog(
       context: context,
@@ -201,78 +202,88 @@ class _HomeScreenState extends State<HomeScreen> {
                       });
                       Navigator.pop(context);
                     },
-                    eventLoader: (day) => _tasksForDate(day),
+
+
+
+                    // 🔥 Custom builders for colored circles + task count badge
                     calendarBuilders: CalendarBuilders(
                       defaultBuilder: (context, day, focusedDay) {
-                        final tasksForDay = _tasksForDate(day);
-                        if (tasksForDay.isNotEmpty) {
+                        final tasks = _tasksForDate(day);
+                        if (tasks.isNotEmpty) {
+                          final completedCount =
+                              tasks.where((t) => t.isDone).length;
+
+                          Color bgColor;
+                          if (completedCount == tasks.length) {
+                            bgColor = Colors.green; // ✅ all done
+                          } else if (completedCount > 0) {
+                            bgColor = Colors.orange; // ⚠️ some done
+                          } else {
+                            bgColor = Colors.red; // ❌ none done
+                          }
+
                           return Stack(
-                            alignment: Alignment.center,
                             children: [
-                              // Green circle
                               Container(
-                                width: 36,
-                                height: 36,
+                                margin: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
-                                  color: Colors.green.shade200,
+                                  color: bgColor,
                                   shape: BoxShape.circle,
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
                                   '${day.day}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ),
+                              // 🔢 Task count badge (superscript style)
+                              Positioned(
+                                right: 2,
+                                top: 2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
                                     color: Colors.black,
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 16,
+                                    minHeight: 16,
+                                  ),
+                                  child: Text(
+                                    '${tasks.length}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
                                 ),
                               ),
-
                             ],
                           );
                         }
-                        return Center(
-                          child: Text(
-                            '${day.day}',
-                            style: const TextStyle(color: Colors.black),
-                          ),
-                        );
-                      },
-                      selectedBuilder: (context, day, focusedDay) {
-                        final tasksForDay = _tasksForDate(day);
-                        return Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.green.shade400,
-                                shape: BoxShape.circle,
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                '${day.day}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
+
+                        // 🟦 Highlight today if no tasks
+                        if (day.year == DateTime.now().year &&
+                            day.month == DateTime.now().month &&
+                            day.day == DateTime.now().day) {
+                          return Container(
+                            margin: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.blue, width: 2),
+                              shape: BoxShape.circle,
                             ),
-                            if (tasksForDay.isNotEmpty)
-                              Positioned(
-                                top: 2,
-                                right: 6,
-                                child: Text(
-                                  '${tasksForDay.length}',
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.red,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        );
+                            alignment: Alignment.center,
+                            child: Text(
+                              '${day.day}',
+                              style: const TextStyle(color: Colors.blue),
+                            ),
+                          );
+                        }
+
+                        return null;
                       },
                     ),
                   ),
@@ -280,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 TextButton(
                   onPressed: () {
                     setState(() {
-                      _selectedDate = null; // clear filter
+                      _selectedDate = null;
                     });
                     Navigator.pop(context);
                   },
@@ -294,6 +305,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
   // Tasks for a date
   List<Task> _tasksForDate(DateTime date) {
     return _tasks
@@ -304,29 +316,117 @@ class _HomeScreenState extends State<HomeScreen> {
         .toList();
   }
 
-  // Show task list in dialog (for stat cards)
-  void _showTaskListDialog(String title, List<Task> tasks) {
+  // Group tasks by date
+  Map<DateTime, List<Task>> _groupTasksByDate(List<Task> tasks) {
+    Map<DateTime, List<Task>> grouped = {};
+    for (var task in tasks) {
+      final date = DateTime(task.date.year, task.date.month, task.date.day);
+      if (!grouped.containsKey(date)) grouped[date] = [];
+      grouped[date]!.add(task);
+    }
+    final sortedKeys = grouped.keys.toList()..sort((a, b) => a.compareTo(b));
+    Map<DateTime, List<Task>> sortedMap = {};
+    for (var key in sortedKeys) {
+      sortedMap[key] = grouped[key]!;
+    }
+    return sortedMap;
+  }
+
+  // Show expired tasks popup
+  void _showExpiredTasksDialog() {
+    final groupedTasks = _groupTasksByDate(_expiredTasks);
+
     showDialog(
       context: context,
-      builder: (_) {
+      builder: (context) {
         return AlertDialog(
-          title: Text(title),
+          title: const Text("Expired Tasks"),
           content: SizedBox(
             width: double.maxFinite,
-            child: tasks.isEmpty
-                ? const Text("No tasks available")
-                : ListView.builder(
+            child: _expiredTasks.isEmpty
+                ? const Text("No expired tasks available")
+                : ListView(
               shrinkWrap: true,
-              itemCount: tasks.length,
-              itemBuilder: (context, index) {
-                final task = tasks[index];
-                final actualIndex = _tasks.indexOf(task);
-                return TaskTile(
-                  task: task,
-                  onToggle: () => _toggleTask(actualIndex),
-                  onDelete: () => _deleteTask(actualIndex),
+              children: groupedTasks.entries.map((entry) {
+                final date = entry.key;
+                final tasks = entry.value;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        "${date.day}/${date.month}/${date.year}",
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    ),
+                    ...tasks.map((task) {
+                      final actualIndex = _tasks.indexOf(task);
+                      return TaskTile(
+                        task: task,
+                        onToggle: () => _toggleTask(actualIndex),
+                        onDelete: () => _deleteTask(actualIndex),
+                      );
+                    }).toList(),
+                    const Divider(),
+                  ],
                 );
-              },
+              }).toList(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Close"),
+            )
+          ],
+        );
+      },
+    );
+  }
+
+  // Show completed tasks popup
+  void _showCompletedTasksDialog() {
+    final groupedTasks = _groupTasksByDate(_completedTasks);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Completed Tasks"),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: _completedTasks.isEmpty
+                ? const Text("No completed tasks available")
+                : ListView(
+              shrinkWrap: true,
+              children: groupedTasks.entries.map((entry) {
+                final date = entry.key;
+                final tasks = entry.value;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        "${date.day}/${date.month}/${date.year}",
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    ),
+                    ...tasks.map((task) {
+                      final actualIndex = _tasks.indexOf(task);
+                      return TaskTile(
+                        task: task,
+                        onToggle: () => _toggleTask(actualIndex),
+                        onDelete: () => _deleteTask(actualIndex),
+                      );
+                    }).toList(),
+                    const Divider(),
+                  ],
+                );
+              }).toList(),
             ),
           ),
           actions: [
@@ -349,10 +449,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Your Day To Day"),
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
         elevation: 2,
+        title: Row(
+          children: [
+            const Icon(Icons.rocket_launch, color: Colors.white), // ✅ Your icon
+            const SizedBox(width: 8), // spacing between icon and text
+            const Text(
+              "My Day To Day",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.calendar_today),
@@ -360,9 +469,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+
       body: Column(
         children: [
-          // Greeting
           Container(
             padding: const EdgeInsets.all(16),
             color: Colors.blue.shade50,
@@ -381,8 +490,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-
-          // Progress
           if (todayTasksCount > 0)
             Container(
               margin: const EdgeInsets.all(16),
@@ -420,8 +527,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-
-          // Task sections
           Expanded(
             child: _selectedDate != null
                 ? _buildTaskSection(
@@ -439,9 +544,100 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (_upcomingTasks.isNotEmpty)
                   _buildTaskSection(
                       "Upcoming", _upcomingTasks, Colors.green),
+
+                // Expired Tasks
+                if (_expiredTasks.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: GestureDetector(
+                      onTap: _showExpiredTasksDialog,
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const Text(
+                                  "Expired Tasks",
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(width: 8),
+                                // 🔴 Count Badge
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.shade400,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    _expiredTasks.length.toString(),
+                                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Icon(Icons.arrow_forward_ios, color: Colors.red.shade400, size: 18),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+// Completed Tasks
+                if (_completedTasks.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: GestureDetector(
+                      onTap: _showCompletedTasksDialog,
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.green.shade200),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const Text(
+                                  "Completed Tasks",
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(width: 8),
+                                // 🟢 Count Badge
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.shade400,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    _completedTasks.length.toString(),
+                                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Icon(Icons.arrow_forward_ios, color: Colors.green.shade400, size: 18),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
                 if (_todayTasks.isEmpty &&
                     _tomorrowTasks.isEmpty &&
-                    _upcomingTasks.isEmpty)
+                    _upcomingTasks.isEmpty &&
+                    _expiredTasks.isEmpty &&
+                    _completedTasks.isEmpty)
                   Center(
                     child: Padding(
                       padding: const EdgeInsets.all(32),
@@ -451,8 +647,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               size: 64, color: Colors.grey.shade300),
                           const SizedBox(height: 16),
                           Text("No tasks available",
-                              style: TextStyle(
-                                  color: Colors.grey.shade600)),
+                              style:
+                              TextStyle(color: Colors.grey.shade600)),
                         ],
                       ),
                     ),
@@ -476,7 +672,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Reusable section widget
   Widget _buildTaskSection(String title, List<Task> tasks, Color color) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -492,8 +687,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(width: 8),
               Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),

@@ -115,7 +115,7 @@ class _SplashScreenState extends State<SplashScreen>
                 child: FadeTransition(
                   opacity: _fadeIn,
                   child: Text(
-                    "Your Day To Day",
+                    "My Day To Day",
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
