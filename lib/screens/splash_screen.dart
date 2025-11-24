@@ -19,6 +19,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -34,19 +35,19 @@ class _SplashScreenState extends State<SplashScreen>
       curve: const Interval(0.3, 0.8, curve: Curves.elasticOut),
     );
 
-    _slideUp = Tween<Offset>(
-      begin: const Offset(0, 0.5),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
-      ),
-    );
+    _slideUp = Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+          ),
+        );
 
     _controller.forward();
 
+    // Navigate after animation
     Timer(const Duration(seconds: 3), () {
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),
@@ -69,17 +70,14 @@ class _SplashScreenState extends State<SplashScreen>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.blue.shade50,
-              Colors.white,
-            ],
+            colors: [Colors.blue.shade50, Colors.white],
           ),
         ),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Animated app icon with multiple effects
+              // Logo Animation (Scale + Fade)
               ScaleTransition(
                 scale: _scale,
                 child: FadeTransition(
@@ -109,7 +107,7 @@ class _SplashScreenState extends State<SplashScreen>
 
               const SizedBox(height: 30),
 
-              // App title with slide up animation
+              // Title Animation
               SlideTransition(
                 position: _slideUp,
                 child: FadeTransition(
@@ -128,7 +126,7 @@ class _SplashScreenState extends State<SplashScreen>
 
               const SizedBox(height: 8),
 
-              // Subtitle with slide up animation
+              // Subtitle
               SlideTransition(
                 position: _slideUp,
                 child: FadeTransition(
@@ -146,12 +144,12 @@ class _SplashScreenState extends State<SplashScreen>
 
               const SizedBox(height: 40),
 
-              // Custom animated loading indicator
+              // Loader
               _buildAnimatedLoader(),
 
               const SizedBox(height: 20),
 
-              // Loading text with subtle animation
+              // Loading Text
               FadeTransition(
                 opacity: _controller.drive(
                   CurveTween(curve: const Interval(0.7, 1.0)),
@@ -172,6 +170,7 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
+  // 🔵 Custom Loader Animation
   Widget _buildAnimatedLoader() {
     return SizedBox(
       width: 60,
@@ -179,34 +178,23 @@ class _SplashScreenState extends State<SplashScreen>
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Outer rotating circle
+          // Rotating Outer Circle
           RotationTransition(
-            turns: _controller.drive(
-              CurveTween(curve: Curves.linear),
-            ),
+            turns: _controller,
             child: Container(
               width: 40,
               height: 40,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.blue.shade300,
-                  width: 2,
-                ),
+                border: Border.all(color: Colors.blue.shade300, width: 2),
               ),
             ),
           ),
 
-          // Middle pulsing circle
+          // Middle Pulse Circle
           ScaleTransition(
-            scale: _controller.drive(
-              CurveTween(
-                curve: const Interval(0.0, 0.5, curve: Curves.easeInOut),
-              ).chain(
-                CurveTween(
-                  curve: const SawTooth(3),
-                ),
-              ),
+            scale: Tween<double>(begin: 0.8, end: 1.2).animate(
+              CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
             ),
             child: Container(
               width: 25,
@@ -218,16 +206,10 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ),
 
-          // Inner dot
+          // Inner Dot
           ScaleTransition(
-            scale: _controller.drive(
-              CurveTween(
-                curve: const Interval(0.5, 1.0, curve: Curves.easeInOut),
-              ).chain(
-                CurveTween(
-                  curve: const SawTooth(3),
-                ),
-              ),
+            scale: Tween<double>(begin: 0.7, end: 1.1).animate(
+              CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
             ),
             child: Container(
               width: 10,
