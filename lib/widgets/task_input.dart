@@ -34,7 +34,7 @@ class _TaskInputState extends State<TaskInput> {
             child: TextField(
               controller: _controller,
               decoration: const InputDecoration(
-                hintText: "Enter new task.....",
+                hintText: "Enter new task.......",
                 border: OutlineInputBorder(),
               ),
             ),

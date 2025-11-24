@@ -9,7 +9,7 @@ class TaskTile extends StatelessWidget {
   final VoidCallback onToggle;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
-  final VoidCallback onTap; // 🚀 New callback for when the tile is tapped
+  final VoidCallback onTap; 
 
   const TaskTile({
     super.key,

@@ -20,7 +20,7 @@ class _SecureVaultScreenState extends State<SecureVaultScreen> {
 
   String _storedText = "";
   String _storedTitle = "";
-  bool _isAddingContent = true; // 🚀 Initially show the add content page
+  bool _isAddingContent = true; 
   bool _isContentVisible = false; // Controls visibility of saved content
   String _errorMessage = "";
   bool _hasPassword = false;
