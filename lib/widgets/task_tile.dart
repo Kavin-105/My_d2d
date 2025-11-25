@@ -17,7 +17,7 @@ class TaskTile extends StatelessWidget {
     required this.onToggle,
     required this.onDelete,
     required this.onEdit,
-    required this.onTap, // 🚀 New required argument
+    required this.onTap, 
   });
 
   Future<void> _launchURL(String url) async {
@@ -32,7 +32,7 @@ class TaskTile extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
       child: ListTile(
-        onTap: onTap, // 🚀 Trigger the onTap callback
+        onTap: onTap, 
         leading: IconButton(
           icon: Icon(
             task.isDone ? Icons.check_circle : Icons.radio_button_unchecked,
@@ -46,7 +46,7 @@ class TaskTile extends StatelessWidget {
             fontSize: 16,
             decoration: task.isDone ? TextDecoration.lineThrough : null,
           ),
-          overflow: TextOverflow.ellipsis, // ✂️ Add ellipsis for long titles
+          overflow: TextOverflow.ellipsis, 
         ),
         subtitle: Text(
           // 📅 Only show the date in the subtitle
